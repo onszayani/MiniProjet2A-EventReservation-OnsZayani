@@ -6,8 +6,20 @@ security:
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
         users_in_memory: { memory: null }
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+        # used to reload user from session & other features (e.g. switch_user)
+
 
     firewalls:
+        api_token_refresh:
+            pattern: ^/api/token/refresh
+            stateless: true
+            provider: app_user_provider  # Move user_provider here
+            refresh_jwt:
+                check_path: /api/token/refresh  
         dev:
             # Ensure dev tools and static assets are always allowed
             pattern: ^/(_profiler|_wdt|assets|build)/
@@ -15,6 +27,11 @@ security:
         main:
             lazy: true
             provider: users_in_memory
+        api:
+            pattern: ^/api
+            stateless: true
+            provider: app_user_provider
+            jwt: ~
 
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall

@@ -3,8 +3,11 @@
 namespace App\Entity;
 
 use App\Repository\EventRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: EventRepository::class)]
 class Event
@@ -12,35 +15,46 @@ class Event
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+    private int $id ;
 
     #[ORM\Column(length: 255)]
-    private ?string $title = null;
+    private string $title ;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $description = null;
+    private string $description ;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $dateDeb = null;
+    private \DateTimeImmutable $dateDeb ;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $dateFin = null;
+    private \DateTimeImmutable $dateFin ;
 
     #[ORM\Column(length: 255)]
-    private ?string $location = null;
+    private string $location ;
 
     #[ORM\Column]
-    private ?int $seats = null;
+    private int $seats ;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $image = null;
+    private string $image ;
 
-    public function getId(): ?int
+    /**
+     * @var Collection<int, Reservation>
+     */
+    #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'event')]
+    private Collection $reservations;
+
+    public function __construct()
+    {
+        $this->reservations = new ArrayCollection();
+    }
+
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getTitle(): ?string
+    public function getTitle(): string
     {
         return $this->title;
     }
@@ -52,19 +66,19 @@ class Event
         return $this;
     }
 
-    public function getDescription(): ?string
+    public function getDescription(): string
     {
         return $this->description;
     }
 
-    public function setDescription(?string $description): static
+    public function setDescription(string $description): static
     {
         $this->description = $description;
 
         return $this;
     }
 
-    public function getDateDeb(): ?\DateTimeImmutable
+    public function getDateDeb(): \DateTimeImmutable
     {
         return $this->dateDeb;
     }
@@ -76,7 +90,7 @@ class Event
         return $this;
     }
 
-    public function getDateFin(): ?\DateTimeImmutable
+    public function getDateFin(): \DateTimeImmutable
     {
         return $this->dateFin;
     }
@@ -88,7 +102,7 @@ class Event
         return $this;
     }
 
-    public function getLocation(): ?string
+    public function getLocation(): string
     {
         return $this->location;
     }
@@ -100,7 +114,7 @@ class Event
         return $this;
     }
 
-    public function getSeats(): ?int
+    public function getSeats(): int
     {
         return $this->seats;
     }
@@ -112,14 +126,44 @@ class Event
         return $this;
     }
 
-    public function getImage(): ?string
+    public function getImage(): string
     {
         return $this->image;
     }
 
-    public function setImage(?string $image): static
+    public function setImage(string $image): static
     {
         $this->image = $image;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Reservation>
+     */
+    public function getReservations(): Collection
+    {
+        return $this->reservations;
+    }
+
+    public function addReservation(Reservation $reservation): static
+    {
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
+            $reservation->setEvent($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReservation(Reservation $reservation): static
+    {
+        if ($this->reservations->removeElement($reservation)) {
+            // set the owning side to null (unless already changed)
+            if ($reservation->getEvent() === $this) {
+                $reservation->setEvent(null);
+            }
+        }
 
         return $this;
     }

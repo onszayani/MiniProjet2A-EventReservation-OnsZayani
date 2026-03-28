@@ -1,0 +1,126 @@
+{% extends 'base.html.twig' %}
+{% block stylesheets %}
+        <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+
+{% endblock %}
+
+
+{% block title %}Connexion — MiniEvent{% endblock %}
+
+{% block body %}
+    <div class="screen">
+        <img src="{{ asset('images/Mic-Event.png') }}" alt="Logo" class="logo-img">
+        <h2>Connexion / Inscription</h2>
+
+        <div class="auth-box">
+            <div class="form-group">
+                <label for="auth-email">Adresse e-mail</label>
+                <input type="email"
+                       id="auth-email"
+                       placeholder="vous@exemple.com"
+                       autocomplete="email">
+            </div>
+
+            <div class="form-group" id="name-group">
+                <label for="auth-name">Nom affiché (inscription uniquement)</label>
+                <input type="text"
+                       id="auth-name"
+                       placeholder="Prénom Nom"
+                       autocomplete="name">
+            </div>
+
+            <div id="passkey-supported">
+                <button id="btn-register" class="btn btn-primary btn-full">
+                    🪪 S'inscrire avec Passkey
+                </button>
+                <div class="separator">ou</div>
+                <button id="btn-login-passkey" class="btn btn-outline-dark btn-full">
+                    🔑 Se connecter avec Passkey
+                </button>
+            </div>
+
+            <div id="passkey-unsupported" class="hidden">
+                <div class="alert alert-warning">
+                    <p>⚠️ Navigateur non compatible avec les passkeys.</p>
+                    <p>Utilisez Chrome 108+, Firefox 113+ ou Safari 16+.</p>
+                </div>
+            </div>
+
+            <div id="auth-message" class="message hidden"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/auth.js') }}"></script>
+    <script src="{{ asset('js/api.js') }}"></script>
+
+    <script>
+        var EVENTS_URL = '{{ path('app_events') }}';
+
+        function showMessage(type, text) {
+            var el = document.getElementById('auth-message');
+            el.className = 'message ' + type;
+            el.textContent = text;
+            el.classList.remove('hidden');
+            setTimeout(function() {
+                el.classList.add('hidden');
+            }, 5000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Détecter support WebAuthn
+            if (typeof Auth !== 'undefined' && Auth.isPasskeySupported && !Auth.isPasskeySupported()) {
+                document.getElementById('passkey-supported').classList.add('hidden');
+                document.getElementById('passkey-unsupported').classList.remove('hidden');
+            }
+
+            // Inscription avec Passkey
+            var registerBtn = document.getElementById('btn-register');
+            if (registerBtn) {
+                registerBtn.onclick = async function() {
+                    var email = document.getElementById('auth-email').value.trim();
+                    var name = document.getElementById('auth-name').value.trim() || email;
+
+                    if (!email) {
+                        showMessage('error', 'Veuillez saisir votre email.');
+                        return;
+                    }
+
+                    this.disabled = true;
+                    try {
+                        var user = await Auth.register(email, name);
+                        showMessage('success', 'Bienvenue ' + (user.displayName || user.email) + ' !');
+                        setTimeout(function() {
+                            window.location.href = EVENTS_URL;
+                        }, 1200);
+                    } catch(err) {
+                        showMessage('error', err.message || 'Erreur lors de l\'inscription');
+                    } finally {
+                        this.disabled = false;
+                    }
+                };
+            }
+
+            // Connexion avec Passkey
+            var loginBtn = document.getElementById('btn-login-passkey');
+            if (loginBtn) {
+                loginBtn.onclick = async function() {
+                    this.disabled = true;
+                    try {
+                        var user = await Auth.login();
+                        showMessage('success', 'Connexion réussie ! Bonjour ' + (user.displayName || user.email));
+                        setTimeout(function() {
+                            window.location.href = EVENTS_URL;
+                        }, 1200);
+                    } catch(err) {
+                        showMessage('error', err.message || 'Erreur lors de la connexion');
+                    } finally {
+                        this.disabled = false;
+                    }
+                };
+            }
+        });
+    </script>
+{% endblock %}

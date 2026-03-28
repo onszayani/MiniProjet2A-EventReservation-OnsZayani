@@ -19,7 +19,7 @@ security:
             stateless: true
             provider: app_user_provider  # Move user_provider here
             refresh_jwt:
-                check_path: /api/token/refresh  
+                check_path: /api/token/refresh
         dev:
             # Ensure dev tools and static assets are always allowed
             pattern: ^/(_profiler|_wdt|assets|build)/

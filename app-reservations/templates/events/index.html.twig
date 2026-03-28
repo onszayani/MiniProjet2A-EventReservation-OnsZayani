@@ -1,0 +1,182 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Événements à venir — MiniEvent{% endblock %}
+
+{% block body %}
+
+    {# ── Slider hero ── #}
+    <section class="hero-slider">
+        <div class="slide active" style="background-image: url('{{ asset('images/hero1.jpg') }}');">
+            <div class="slide-content">
+                <div>
+                    <h1>Découvrez des Événements Tech Incroyables</h1>
+                    <p>Connectez, Apprenez et Grandissez avec la Communauté Tech</p>
+                </div>
+            </div>
+        </div>
+        <div class="slide" style="background-image: url('{{ asset('images/hero2.jfif') }}');">
+            <div class="slide-content">
+                <div>
+                    <h1>Réseautage avec les Leaders de l'Industrie</h1>
+                    <p>Participez à des conférences, ateliers et événements de networking</p>
+                </div>
+            </div>
+        </div>
+        <div class="slider-nav">
+            <span class="slider-dot active" data-slide="0"></span>
+            <span class="slider-dot" data-slide="1"></span>
+        </div>
+    </section>
+
+    {# ── Filtres catégories ── #}
+    <section class="filter-section">
+        <div class="filter-container">
+            <h2 class="filter-title">Parcourir par Catégorie</h2>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">Tous les Événements</button>
+                <button class="filter-btn" data-filter="conference">Conférences</button>
+                <button class="filter-btn" data-filter="hackathon">Hackathons</button>
+                <button class="filter-btn" data-filter="workshop">Ateliers</button>
+                <button class="filter-btn" data-filter="networking">Networking</button>
+                <button class="filter-btn" data-filter="quiz">Quiz</button>
+            </div>
+        </div>
+    </section>
+
+    {# ── Grille événements ── #}
+    <section class="container">
+        <h2 class="section-title">Événements à Venir</h2>
+        <div class="events-grid" id="events-grid">
+            <div class="loading">Chargement...</div>
+        </div>
+    </section>
+
+    {# ── Modal détail événement ── #}
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal">
+            <button id="modal-close" class="modal-close">&times;</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    {# ── Statistiques ── #}
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number" data-target="250">0</div>
+                <div class="stat-label">Events Hosted</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" data-target="15000">0</div>
+                <div class="stat-label">Happy Attendees</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" data-target="120">0</div>
+                <div class="stat-label">Tech Partners</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" data-target="98">0</div>
+                <div class="stat-label">Satisfaction Rate</div>
+            </div>
+        </div>
+    </section>
+
+    {# ── Événements passés ── #}
+    <section class="container">
+        <h2 class="section-title">Past Successful Events</h2>
+        <div class="events-grid">
+            {% for event in pastEvents %}
+                <article class="event-card">
+                    <img src="{{ asset(event.image) }}" alt="{{ event.title }}">
+                    <div class="event-card-body">
+                        <h3>{{ event.title }}</h3>
+                        <p>Successfully completed</p>
+                        <p>{{ event.attendees }} attendees</p>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+    {# ── FOOTER ── #}
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-box">
+                <h2 class="footer-logo">Mic Events</h2>
+                <p>Your one-stop platform for discovering and booking tech events.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-box">
+                <h3>Help Center</h3>
+                <ul>
+                    <li><a href="#">Support</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#contact">Contact Us</a></li>
+                    <li><a href="#">Report a problem</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-box">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#events">Events</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="{{ path('auth_login') }}">Login</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-box">
+                <h3>Join Our Mailing List</h3>
+                <p>Stay updated on our latest news and events.</p>
+                <form class="newsletter-form" onsubmit="return false;">
+                    <input type="email" placeholder="Your email" id="newsletter-email">
+                    <button type="button" onclick="subscribeNewsletter()">Join</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© {{ 'now'|date('Y') }} Mic Events. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/auth.js') }}"></script>
+    <script src="{{ asset('js/api.js') }}"></script>
+    <script src="{{ asset('js/app.js') }}"></script>
+
+    <script>
+        window.LOGIN_URL = '{{ path('auth_login') }}';
+        window.API_URL = '{{ path('api_events') }}';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof loadEvents === 'function') {
+                loadEvents();
+            }
+
+            const modalClose = document.getElementById('modal-close');
+            const modalOverlay = document.getElementById('modal-overlay');
+
+            if (modalClose) {
+                modalClose.onclick = function() {
+                    modalOverlay.classList.add('hidden');
+                };
+            }
+
+            if (modalOverlay) {
+                modalOverlay.onclick = function(e) {
+                    if (e.target === this) this.classList.add('hidden');
+                };
+            }
+        });
+    </script>
+{% endblock %}

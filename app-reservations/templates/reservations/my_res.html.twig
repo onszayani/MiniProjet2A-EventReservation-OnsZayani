@@ -1,0 +1,103 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes réservations{% endblock %}
+
+{% block body %}
+    <section class="container">
+        <h2 class="section-title">Mes réservations</h2>
+
+        {% if reservations is empty %}
+            <div class="alert alert-info">
+                <p>Aucune réservation trouvée.</p>
+                <a href="{{ path('app_events') }}" class="btn btn-primary">Découvrir des événements</a>
+            </div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Événement</th>
+                        <th>Date</th>
+                        <th>Lieu</th>
+                        <th>Statut</th>
+                        <th>Réservé le</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for reservation in reservations %}
+                        <tr>
+                            <td>
+                                <strong>{{ reservation.event.title }}</strong>
+                                <br>
+                                <small>{{ reservation.event.description|slice(0, 50) ~ '...' }}</small>
+                            </td>
+                            <td>{{ reservation.event.dateDeb|date('d/m/Y H:i') }}</td>
+                            <td>{{ reservation.event.location }}</td>
+                            <td>
+                                {% if reservation.status == 'accepted' %}
+                                    <span class="badge badge-success">Confirmée</span>
+                                {% elseif reservation.status == 'pending' %}
+                                    <span class="badge badge-warning">En attente</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Annulée</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ reservation.createdAt|date('d/m/Y H:i') }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .badge-warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .badge-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .alert {
+            text-align: center;
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #dee2e6;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .table tr:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+{% endblock %}

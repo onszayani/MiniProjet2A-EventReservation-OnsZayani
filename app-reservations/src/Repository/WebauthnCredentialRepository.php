@@ -40,4 +40,24 @@ class WebauthnCredentialRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+    public function saveCredential(
+        User $user, PublicKeyCredentialSource $source, string $name='Ma passkey'
+    ): WebauthnCredential {
+        $c = new WebauthnCredential($user, $name);
+        $c->setCredentialSource($source);
+        $this->getEntityManager()->persist($c);
+        $this->getEntityManager()->flush();
+        return $c;
+    }
+
+    public function findByCredentialId(string $credentialId): ?WebauthnCredential
+    {
+        foreach ($this->findAll() as $cred) {
+            if ($cred->getCredentialSource()->getPublicKeyCredentialId() === $credentialId)
+                return $cred;
+        }
+        return null;
+    }
+
 }

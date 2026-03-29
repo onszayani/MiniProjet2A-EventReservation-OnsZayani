@@ -1,5 +1,9 @@
 {% extends 'base.html.twig' %}
 
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+{% endblock %}
+
 {% block title %}Connexion — MiniEvent{% endblock %}
 
 {% block body %}
@@ -8,120 +12,97 @@
         <h2>Bienvenue sur MiniEvent</h2>
 
         <div class="auth-box">
+
             <div class="form-group">
                 <label for="auth-email">📧 Adresse e-mail</label>
-                <input type="email"
-                       id="auth-email"
-                       placeholder="vous@exemple.com"
-                       autocomplete="email">
+                <input type="email" id="auth-email" placeholder="vous@exemple.com" autocomplete="email">
             </div>
 
             <div class="form-group" id="name-group">
-                <label for="auth-name">👤 Nom affiché (inscription uniquement)</label>
-                <input type="text"
-                       id="auth-name"
-                       placeholder="Prénom Nom"
-                       autocomplete="name">
+                <label for="auth-name">
+                    👤 Nom affiché
+                    <span style="font-weight:400;opacity:.7">(inscription uniquement)</span>
+                </label>
+                <input type="text" id="auth-name" placeholder="Prénom Nom" autocomplete="name">
             </div>
 
             <div id="passkey-supported">
                 <button id="btn-register" class="btn-full btn-primary">
-                    🪪 S'inscrire avec Passkey
+                    S'inscrire avec Passkey
                 </button>
                 <div class="separator">ou</div>
                 <button id="btn-login-passkey" class="btn-full btn-outline-dark">
-                    🔑 Se connecter avec Passkey
+                    Se connecter avec Passkey
                 </button>
             </div>
 
             <div id="passkey-unsupported" class="hidden">
                 <div class="alert-warning">
-                    <p>⚠️ Navigateur non compatible avec les passkeys.</p>
-                    <p>Utilisez Chrome 108+, Firefox 113+ ou Safari 16+.</p>
+                    <p>⚠️ Navigateur non compatible Passkeys.</p>
                 </div>
             </div>
 
             <div id="auth-message" class="message hidden"></div>
+
         </div>
     </div>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="{{ asset('js/auth.js') }}"></script>
     <script src="{{ asset('js/api.js') }}"></script>
+    <script src="{{ asset('js/auth.js') }}"></script>
 
     <script>
-        var EVENTS_URL = '{{ path('app_events') }}';
+        const EVENTS_URL = '{{ path("app_events") }}';
 
         function showMessage(type, text) {
-            var el = document.getElementById('auth-message');
+            const el = document.getElementById('auth-message');
             el.className = 'message ' + type;
             el.textContent = text;
             el.classList.remove('hidden');
-            setTimeout(function() {
-                el.classList.add('hidden');
-            }, 5000);
+            setTimeout(() => el.classList.add('hidden'), 5000);
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Détecter support WebAuthn
-            if (typeof Auth !== 'undefined' && Auth.isPasskeySupported && !Auth.isPasskeySupported()) {
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!Auth.isPasskeySupported()) {
                 document.getElementById('passkey-supported').classList.add('hidden');
                 document.getElementById('passkey-unsupported').classList.remove('hidden');
+                return;
             }
 
-            // Inscription avec Passkey
-            var registerBtn = document.getElementById('btn-register');
-            if (registerBtn) {
-                registerBtn.onclick = async function() {
-                    var email = document.getElementById('auth-email').value.trim();
-                    var name = document.getElementById('auth-name').value.trim() || email;
+            /* ---------- REGISTER ---------- */
+            document.getElementById('btn-register').onclick = async () => {
+                const email = auth-email.value.trim();
+                const name = auth-name.value.trim() || email;
 
-                    if (!email) {
-                        showMessage('error', 'Veuillez saisir votre email.');
-                        return;
-                    }
+                if (!email) return showMessage('error', 'Email requis.');
 
-                    this.disabled = true;
-                    this.textContent = '⏳ Inscription en cours...';
+                try {
+                    const user = await Auth.register(email, name);
+                    showMessage('success', 'Bienvenue ' + user.displayName);
+                    setTimeout(() => window.location.href = EVENTS_URL, 1200);
 
-                    try {
-                        var user = await Auth.register(email, name);
-                        showMessage('success', '✨ Bienvenue ' + (user.displayName || user.email) + ' !');
-                        setTimeout(function() {
-                            window.location.href = EVENTS_URL;
-                        }, 1200);
-                    } catch(err) {
-                        showMessage('error', err.message || 'Erreur lors de l\'inscription');
-                        this.textContent = '🪪 S\'inscrire avec Passkey';
-                    } finally {
-                        this.disabled = false;
-                    }
-                };
-            }
+                } catch (err) {
+                    showMessage('error', err.message);
+                }
+            };
 
-            // Connexion avec Passkey
-            var loginBtn = document.getElementById('btn-login-passkey');
-            if (loginBtn) {
-                loginBtn.onclick = async function() {
-                    this.disabled = true;
-                    this.textContent = '⏳ Connexion en cours...';
+            /* ---------- LOGIN ---------- */
+            document.getElementById('btn-login-passkey').onclick = async () => {
+                const email = auth-email.value.trim();
+                if (!email) return showMessage('error', 'Email requis.');
 
-                    try {
-                        var user = await Auth.login();
-                        showMessage('success', '✅ Connexion réussie ! Bonjour ' + (user.displayName || user.email));
-                        setTimeout(function() {
-                            window.location.href = EVENTS_URL;
-                        }, 1200);
-                    } catch(err) {
-                        showMessage('error', err.message || 'Erreur lors de la connexion');
-                        this.textContent = '🔑 Se connecter avec Passkey';
-                    } finally {
-                        this.disabled = false;
-                    }
-                };
-            }
+                try {
+                    const user = await Auth.loginWithPasskey(email);
+                    showMessage('success', 'Bonjour ' + user.displayName);
+                    setTimeout(() => window.location.href = EVENTS_URL, 1200);
+
+                } catch (err) {
+                    showMessage('error', err.message);
+                }
+            };
         });
     </script>
 {% endblock %}
+

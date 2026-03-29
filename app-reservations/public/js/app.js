@@ -153,4 +153,8 @@ if (loadMoreBtn) {
         }
     });
 }
+var user = await Auth.login();
+fetchUserInfo(); // update navbar
+showMessage('success', 'Bonjour ' + (user.displayName || user.email) + ' !');
+setTimeout(function () { window.location.href = EVENTS_URL; }, 1200);
 

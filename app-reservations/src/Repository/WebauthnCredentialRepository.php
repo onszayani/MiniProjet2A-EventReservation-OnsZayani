@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\WebauthnCredential;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,36 +17,18 @@ class WebauthnCredentialRepository extends ServiceEntityRepository
         parent::__construct($registry, WebauthnCredential::class);
     }
 
-    //    /**
-    //     * @return WebauthnCredential[] Returns an array of WebauthnCredential objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('w')
-    //            ->andWhere('w.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('w.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
 
-    //    public function findOneBySomeField($value): ?WebauthnCredential
-    //    {
-    //        return $this->createQueryBuilder('w')
-    //            ->andWhere('w.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    public function getDescriptorsForUser(User $user): array
+    {
+        // ... pas utilisé ici
+        return [];
+    }
 
     public function saveCredential(
-        User $user, PublicKeyCredentialSource $source, string $name='Ma passkey'
+        User $user, string $credentialSourceJson, string $name='Ma passkey'
     ): WebauthnCredential {
         $c = new WebauthnCredential($user, $name);
-        $c->setCredentialSource($source);
+        $c->setCredentialData($credentialSourceJson);
         $this->getEntityManager()->persist($c);
         $this->getEntityManager()->flush();
         return $c;
@@ -54,8 +37,10 @@ class WebauthnCredentialRepository extends ServiceEntityRepository
     public function findByCredentialId(string $credentialId): ?WebauthnCredential
     {
         foreach ($this->findAll() as $cred) {
-            if ($cred->getCredentialSource()->getPublicKeyCredentialId() === $credentialId)
+            $data = json_decode($cred->getCredentialData(), true);
+            if (isset($data['publicKeyCredentialId']) && $data['publicKeyCredentialId'] === $credentialId) {
                 return $cred;
+            }
         }
         return null;
     }

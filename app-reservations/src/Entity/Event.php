@@ -44,6 +44,9 @@ class Event
     #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'event')]
     private Collection $reservations;
 
+    #[ORM\Column(length: 255)]
+    private ?string $category = null;
+
     public function __construct()
     {
         $this->reservations = new ArrayCollection();
@@ -164,6 +167,18 @@ class Event
                 $reservation->setEvent(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getCategory(): ?string
+    {
+        return $this->category;
+    }
+
+    public function setCategory(string $category): static
+    {
+        $this->category = $category;
 
         return $this;
     }

@@ -2,157 +2,213 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}MiniEvent{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/login.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/header.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/footer.css') }}">
-    {% block stylesheets %}{% endblock %}
+    <title>Connexion — MiniEvent</title>
+
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/login.css">
 </head>
 <body>
 
-{# ── HEADER / NAVBAR ── #}
 <header>
-    <a href="{{ path('app_events') }}">
-        <img src="{{ asset('images/Mic-Event.png') }}" alt="MicEvent Logo" class="header-logo">
+    <a href="/events">
+        <img src="/images/Mic-Event.png" class="header-logo">
     </a>
+
     <div class="nav-links">
-        <a href="{{ path('app_events') }}"
-           class="{% if app.request.attributes.get('_route') == 'app_events' %}active{% endif %}">
-            Événements
-        </a>
-        <a href="{{ path('reservations_my') }}"
-           id="nav-reservations"
-           class="hidden">
+        <a href="/events">Événements</a>
+
+        <a href="/reservations/my" id="nav-reservations" class="hidden">
             Mes réservations
         </a>
-        <span id="nav-user" class="nav-user hidden"></span>
-        <button id="btn-logout"
-                class="btn btn-outline hidden"
-                onclick="logout()">
+
+        <span id="nav-user" class="hidden"></span>
+
+        <button id="btn-logout" class="hidden" onclick="logout()">
             Déconnexion
         </button>
-        <a href="{{ path('auth_login') }}"
-           class="login-btn"
-           id="btn-login">
+
+        <a href="/login" id="btn-login">
             Connexion
         </a>
     </div>
 </header>
 
-{# ── CONTENU DE LA PAGE ── #}
 <main>
-    {% block body %}{% endblock %}
+    <div class="screen">
+        <img src="/images/Mic-Event.png" alt="Logo" class="logo">
+        <h2>Bienvenue sur MiniEvent</h2>
+
+        <div class="auth-box">
+
+            <div class="form-group">
+                <label for="auth-email">📧 Adresse e-mail</label>
+                <input type="email" id="auth-email" placeholder="vous@exemple.com" autocomplete="email">
+            </div>
+
+            <div class="form-group" id="name-group">
+                <label for="auth-name">
+                    👤 Nom affiché
+                    <span style="font-weight:400;opacity:.7">(inscription uniquement)</span>
+                </label>
+                <input type="text" id="auth-name" placeholder="Prénom Nom" autocomplete="name">
+            </div>
+
+            <div id="passkey-supported">
+                <button id="btn-register" class="btn-full btn-primary">
+                    S'inscrire avec Passkey
+                </button>
+                <div class="separator">ou</div>
+                <button id="btn-login-passkey" class="btn-full btn-outline-dark">
+                    Se connecter avec Passkey
+                </button>
+            </div>
+
+            <div id="passkey-unsupported" class="hidden">
+                <div class="alert-warning">
+                    <p>⚠️ Navigateur non compatible Passkeys.</p>
+                </div>
+            </div>
+
+            <div id="auth-message" class="message hidden"></div>
+
+        </div>
+    </div>
 </main>
 
+<script>
+    function getToken() {
+        return localStorage.getItem('jwt_token');
+    }
 
-{# ── SCRIPT JWT NAVBAR ── #}
-{#<script>#}
-{#    // Configuration#}
-{#    const API_BASE_URL = '{{ path('app_events')|slice(0, -13) }}'; // Enlève '/api/evenements'#}
+    function removeToken() {
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('refresh_token');
+    }
 
-{#    function getToken() {#}
-{#        return localStorage.getItem('jwt_token');#}
-{#    }#}
+    function updateNavbar(user) {
+        const navReservations = document.getElementById('nav-reservations');
+        const btnLogout = document.getElementById('btn-logout');
+        const btnLogin = document.getElementById('btn-login');
+        const navUser = document.getElementById('nav-user');
 
-{#    function setToken(token) {#}
-{#        localStorage.setItem('jwt_token', token);#}
-{#    }#}
+        if (user) {
+            navReservations.classList.remove('hidden');
+            btnLogout.classList.remove('hidden');
+            btnLogin.classList.add('hidden');
 
-{#    function removeToken() {#}
-{#        localStorage.removeItem('jwt_token');#}
-{#        localStorage.removeItem('refresh_token');#}
-{#    }#}
+            navUser.textContent = user.displayName || user.email;
+            navUser.classList.remove('hidden');
+        } else {
+            navReservations.classList.add('hidden');
+            btnLogout.classList.add('hidden');
+            btnLogin.classList.remove('hidden');
+            navUser.classList.add('hidden');
+        }
+    }
 
-{#    function isAuthenticated() {#}
-{#        return !!getToken();#}
-{#    }#}
+    async function fetchUserInfo() {
+        const token = getToken();
 
-{#    function updateNavbar(user) {#}
-{#        const navReservations = document.getElementById('nav-reservations');#}
-{#        const btnLogout = document.getElementById('btn-logout');#}
-{#        const btnLogin = document.getElementById('btn-login');#}
-{#        const navUser = document.getElementById('nav-user');#}
+        if (!token) {
+            updateNavbar(null);
+            return;
+        }
 
-{#        if (user) {#}
-{#            if (navReservations) navReservations.classList.remove('hidden');#}
-{#            if (btnLogout) btnLogout.classList.remove('hidden');#}
-{#            if (btnLogin) btnLogin.classList.add('hidden');#}
-{#            if (navUser) {#}
-{#                navUser.textContent = user.displayName || user.email || user.username;#}
-{#                navUser.classList.remove('hidden');#}
-{#            }#}
-{#        } else {#}
-{#            if (navReservations) navReservations.classList.add('hidden');#}
-{#            if (btnLogout) btnLogout.classList.add('hidden');#}
-{#            if (btnLogin) btnLogin.classList.remove('hidden');#}
-{#            if (navUser) navUser.classList.add('hidden');#}
-{#        }#}
-{#    }#}
+        try {
+            const res = await fetch('/api/auth/me', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
 
-{#    async function fetchUserInfo() {#}
-{#        const token = getToken();#}
-{#        if (!token) {#}
-{#            updateNavbar(null);#}
-{#            return null;#}
-{#        }#}
+            if (!res.ok) {
+                removeToken();
+                updateNavbar(null);
+                return;
+            }
 
-{#        try {#}
-{#            const response = await fetch('/api/auth/me', {#}
-{#                headers: {#}
-{#                    'Authorization': 'Bearer ' + token,#}
-{#                    'Content-Type': 'application/json'#}
-{#                }#}
-{#            });#}
+            const user = await res.json();
+            updateNavbar(user);
 
-{#            if (response.ok) {#}
-{#                const user = await response.json();#}
-{#                updateNavbar(user);#}
-{#                return user;#}
-{#            } else {#}
-{#                // Token invalide ou expiré#}
-{#                removeToken();#}
-{#                updateNavbar(null);#}
-{#                return null;#}
-{#            }#}
-{#        } catch (error) {#}
-{#            console.error('Erreur lors de la récupération des infos utilisateur:', error);#}
-{#            updateNavbar(null);#}
-{#            return null;#}
-{#        }#}
-{#    }#}
+        } catch (e) {
+            updateNavbar(null);
+        }
+    }
 
-{#    function logout() {#}
-{#        removeToken();#}
-{#        updateNavbar(null);#}
-{#        // Rediriger vers la page d'accueil#}
-{#        window.location.href = '{{ path('app_events') }}';#}
-{#    }#}
+    async function logout() {
+        const refresh = localStorage.getItem('refresh_token');
 
-{#    function subscribeNewsletter() {#}
-{#        const emailInput = document.getElementById('newsletter-email');#}
-{#        const email = emailInput?.value.trim();#}
+        if (refresh) {
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ refresh_token: refresh })
+            });
+        }
 
-{#        if (!email) {#}
-{#            alert('Veuillez saisir une adresse email');#}
-{#            return;#}
-{#        }#}
+        removeToken();
+        updateNavbar(null);
+        window.location.href = "/events";
+    }
 
-{#        // Ici vous pouvez ajouter l'appel API pour l'inscription à la newsletter#}
-{#        alert('Merci de vous être inscrit à notre newsletter !');#}
-{#        emailInput.value = '';#}
-{#    }#}
+    document.addEventListener('DOMContentLoaded', fetchUserInfo);
+</script>
 
-{#    // Initialisation au chargement de la page#}
-{#    document.addEventListener('DOMContentLoaded', function() {#}
-{#        fetchUserInfo();#}
-{#    });#}
-{#</script>#}
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
 
-{% block javascripts %}{% endblock %}
+<script>
+    const EVENTS_URL = '/events';
+
+    function showMessage(type, text) {
+        const el = document.getElementById('auth-message');
+        el.className = 'message ' + type;
+        el.textContent = text;
+        el.classList.remove('hidden');
+        setTimeout(() => el.classList.add('hidden'), 5000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!Auth.isPasskeySupported()) {
+            document.getElementById('passkey-supported').classList.add('hidden');
+            document.getElementById('passkey-unsupported').classList.remove('hidden');
+            return;
+        }
+
+        /* ---------- REGISTER ---------- */
+        document.getElementById('btn-register').onclick = async () => {
+            const email = document.getElementById("auth-email").value.trim();
+            const name = document.getElementById("auth-name").value.trim() || email;
+
+            if (!email) return showMessage('error', 'Email requis.');
+
+            try {
+                const user = await Auth.register(email, name);
+                showMessage('success', 'Bienvenue ' + user.displayName);
+                setTimeout(() => window.location.href = EVENTS_URL, 1200);
+
+            } catch (err) {
+                showMessage('error', err.message);
+            }
+        };
+
+        /* ---------- LOGIN ---------- */
+        document.getElementById('btn-login-passkey').onclick = async () => {
+            const email = document.getElementById("auth-email").value.trim();
+
+            if (!email) return showMessage('error', 'Email requis.');
+
+            try {
+                const user = await Auth.loginWithPasskey(email);
+                showMessage('success', 'Bonjour ' + user.displayName);
+                setTimeout(() => window.location.href = EVENTS_URL, 1200);
+
+            } catch (err) {
+                showMessage('error', err.message);
+            }
+        };
+    });
+</script>
 
 </body>
 </html>

@@ -6,7 +6,6 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use Webauthn\PublicKeyCredentialSource;
 
-
 #[ORM\Entity(repositoryClass: WebauthnCredentialRepository::class)]
 class WebauthnCredential
 {
@@ -33,11 +32,11 @@ class WebauthnCredential
         $this->createdAt=$this->lastUsedAt=new \DateTimeImmutable();
     }
 
-    public function getCredentialSource(): PublicKeyCredentialSource
-    { return PublicKeyCredentialSource::createFromArray(json_decode($this->credentialData,true)); }
+    public function getCredentialData(): string
+    { return $this->credentialData; }
 
-    public function setCredentialSource(PublicKeyCredentialSource $src): void
-    { $this->credentialData = json_encode($src); }
+    public function setCredentialData(string $credentialData): self
+    { $this->credentialData = $credentialData; return $this; }
 
     public function touch(): void { $this->lastUsedAt = new \DateTimeImmutable(); }
     public function getId():   Uuid   { return $this->id; }

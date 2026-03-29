@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ event.title }} — MiniEvent{% endblock %}
+
+{% block body %}
+
+    <main class="container" style="padding: 3rem 1rem;">
+        {% if event %}
+            <div style="max-width: 1000px; margin: 0 auto;">
+                <!-- Bouton retour -->
+                <a href="{{ path('app_events') }}" style="display: inline-block; margin-bottom: 2rem; color: #007bff; text-decoration: none;">
+                    ← Retour aux événements
+                </a>
+
+                <!-- Image principale -->
+                <img src="{{ asset(event.image) }}"
+                     alt="{{ event.title }}"
+                     style="width: 100%; height: 450px; object-fit: cover; border-radius: 15px; margin-bottom: 2rem; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+
+                <!-- Badge catégorie -->
+                <span class="event-badge" style="font-size: 1rem; padding: 0.5rem 1.5rem;">
+                {{ event.category|default('Conference')|capitalize }}
+            </span>
+
+                <!-- Titre -->
+                <h1 style="font-size: 2.5rem; margin: 1.5rem 0; color: #003161;">
+                    {{ event.title }}
+                </h1>
+
+                <!-- Informations clés -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 2rem 0; padding: 2rem; background: #f8f9fa; border-radius: 10px;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="font-size: 2rem;">📅</span>
+                        <div>
+                            <strong style="display: block; color: #666;">Date et Heure</strong>
+                            <span>{{ event.dateDeb ? event.dateDeb|date('d M Y à H:i') : 'Date à venir' }}</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="font-size: 2rem;">📍</span>
+                        <div>
+                            <strong style="display: block; color: #666;">Lieu</strong>
+                            <span>{{ event.location|default('Lieu non spécifié') }}</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="font-size: 2rem;">💺</span>
+                        <div>
+                            <strong style="display: block; color: #666;">Places Disponibles</strong>
+                            <span>{{ event.seats }} places</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div style="margin: 3rem 0; line-height: 1.8;">
+                    <h2 style="color: #003161; margin-bottom: 1rem;">À Propos de l'Événement</h2>
+                    <p style="font-size: 1.1rem; color: #444; white-space: pre-line;">
+                        {{ event.description|nl2br }}
+                    </p>
+                </div>
+
+                <!-- Formulaire de réservation -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 3rem; border-radius: 15px; margin-top: 3rem; color: white;">
+                    <h2 style="color: white; margin-bottom: 1.5rem; text-align: center;">Réservez Votre Place Maintenant</h2>
+
+                    {# Messages flash #}
+                    {% for message in app.flashes('reservation_success') %}
+                        <div style="background: #d4edda; color: #155724; padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem; text-align: center; font-weight: bold;">
+                            ✓ {{ message }}
+                        </div>
+                    {% endfor %}
+
+                    {% for message in app.flashes('reservation_error') %}
+                        <div style="background: #f8d7da; color: #721c24; padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem; text-align: center;">
+                            ✗ {{ message }}
+                        </div>
+                    {% endfor %}
+
+                    <form method="POST" action="{{ path('reservation_create') }}" style="background: white; padding: 2.5rem; border-radius: 10px;">
+                        <input type="hidden" name="event_id" value="{{ event.id }}">
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: #333; font-weight: bold;">
+                                Nom complet *
+                            </label>
+                            <input type="text" name="name" required
+                                   placeholder="Ex: Ahmed Ben Ali"
+                                   style="width: 100%; padding: 0.9rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;">
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: #333; font-weight: bold;">
+                                Email *
+                            </label>
+                            <input type="email" name="email" required
+                                   placeholder="Ex: ahmed@email.com"
+                                   style="width: 100%; padding: 0.9rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;">
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: #333; font-weight: bold;">
+                                Téléphone *
+                            </label>
+                            <input type="tel" name="phone" required
+                                   placeholder="Ex: +216 20 123 456"
+                                   style="width: 100%; padding: 0.9rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary"
+                                style="width: 100%; padding: 1.2rem; font-size: 1.1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; font-weight: bold;">
+                             Confirmer Ma Réservation
+                        </button>
+
+                        <p style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                            Vous recevrez un email de confirmation après votre réservation.
+                        </p>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 4rem 0;">
+                <h2>Événement introuvable</h2>
+                <p style="margin: 1rem 0;">Désolé, cet événement n'existe pas ou a été supprimé.</p>
+                <a href="{{ path('app_events') }}" class="btn btn-primary">Retour aux événements</a>
+            </div>
+        {% endif %}
+    </main>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Animation focus sur les inputs
+        const inputs = document.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.borderColor = '#667eea';
+            });
+            input.addEventListener('blur', function() {
+                this.style.borderColor = '#ddd';
+            });
+        });
+    </script>
+{% endblock %}

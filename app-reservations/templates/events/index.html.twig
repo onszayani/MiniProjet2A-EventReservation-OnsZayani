@@ -47,17 +47,30 @@
     <section class="container">
         <h2 class="section-title">Événements à Venir</h2>
         <div class="events-grid" id="events-grid">
-            <div class="loading">Chargement...</div>
+            {% if upcoming is not empty %}
+                {%  for event in upcoming %}
+                    <article class="event-card" data-category="{{ event.category|default('conference') }}">
+                        <img src="{{ event.image ? asset(event.image) : asset('images/default-event.jpg') }}"
+                             alt="{{ event.title }}">
+                        <div class="event-card-body">
+                            <span class="event-badge">{{ (event.category|default('Conference'))|capitalize}}</span>
+                            <h3>{{ event.title }}</h3>
+                            <p class="meta"> {{ event.dateDeb|date('d M Y à H:i') }}</p>
+                            <p class="meta"> {{ event.location }}</p>
+                            <p>{{ event.description|length > 100 ? event.description|slice(0, 97) ~ '...' : event.description }}</p>
+                            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                                <a href="{{ path('event_details', {'id': event.id}) }}" class="btn btn-primary" style="flex: 1;">Voir Détails</a>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            {% else %}
+                <p style="text-align: center; grid-column: 1/-1;">Aucun événement à venir disponible.</p>
+            {% endif %}
         </div>
     </section>
 
-    {# ── Modal détail événement ── #}
-    <div id="modal-overlay" class="modal-overlay hidden">
-        <div class="modal">
-            <button id="modal-close" class="modal-close">&times;</button>
-            <div id="modal-content"></div>
-        </div>
-    </div>
+
 
     {# ── Statistiques ── #}
     <section class="stats-section">
@@ -91,7 +104,7 @@
                     <div class="event-card-body">
                         <h3>{{ event.title }}</h3>
                         <p>Successfully completed</p>
-                        <p>{{ event.attendees }} attendees</p>
+                        <p>{{ event.seats }} attendees</p>
                     </div>
                 </article>
             {% endfor %}
@@ -156,7 +169,7 @@
 
     <script>
         window.LOGIN_URL = '{{ path('auth_login') }}';
-        window.API_URL = '{{ path('api_events') }}';
+        window.API_URL = '{{ path('app_events') }}';
 
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof loadEvents === 'function') {

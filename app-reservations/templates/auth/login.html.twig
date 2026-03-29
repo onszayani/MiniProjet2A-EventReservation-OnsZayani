@@ -1,20 +1,15 @@
 {% extends 'base.html.twig' %}
-{% block stylesheets %}
-        <link rel="stylesheet" href="{{ asset('css/login.css') }}">
-
-{% endblock %}
-
 
 {% block title %}Connexion — MiniEvent{% endblock %}
 
 {% block body %}
     <div class="screen">
-        <img src="{{ asset('images/Mic-Event.png') }}" alt="Logo" class="logo-img">
-        <h2>Connexion / Inscription</h2>
+        <img src="{{ asset('images/Mic-Event.png') }}" alt="Logo" class="logo">
+        <h2>Bienvenue sur MiniEvent</h2>
 
         <div class="auth-box">
             <div class="form-group">
-                <label for="auth-email">Adresse e-mail</label>
+                <label for="auth-email">📧 Adresse e-mail</label>
                 <input type="email"
                        id="auth-email"
                        placeholder="vous@exemple.com"
@@ -22,7 +17,7 @@
             </div>
 
             <div class="form-group" id="name-group">
-                <label for="auth-name">Nom affiché (inscription uniquement)</label>
+                <label for="auth-name">👤 Nom affiché (inscription uniquement)</label>
                 <input type="text"
                        id="auth-name"
                        placeholder="Prénom Nom"
@@ -30,17 +25,17 @@
             </div>
 
             <div id="passkey-supported">
-                <button id="btn-register" class="btn btn-primary btn-full">
+                <button id="btn-register" class="btn-full btn-primary">
                     🪪 S'inscrire avec Passkey
                 </button>
                 <div class="separator">ou</div>
-                <button id="btn-login-passkey" class="btn btn-outline-dark btn-full">
+                <button id="btn-login-passkey" class="btn-full btn-outline-dark">
                     🔑 Se connecter avec Passkey
                 </button>
             </div>
 
             <div id="passkey-unsupported" class="hidden">
-                <div class="alert alert-warning">
+                <div class="alert-warning">
                     <p>⚠️ Navigateur non compatible avec les passkeys.</p>
                     <p>Utilisez Chrome 108+, Firefox 113+ ou Safari 16+.</p>
                 </div>
@@ -89,14 +84,17 @@
                     }
 
                     this.disabled = true;
+                    this.textContent = '⏳ Inscription en cours...';
+
                     try {
                         var user = await Auth.register(email, name);
-                        showMessage('success', 'Bienvenue ' + (user.displayName || user.email) + ' !');
+                        showMessage('success', '✨ Bienvenue ' + (user.displayName || user.email) + ' !');
                         setTimeout(function() {
                             window.location.href = EVENTS_URL;
                         }, 1200);
                     } catch(err) {
                         showMessage('error', err.message || 'Erreur lors de l\'inscription');
+                        this.textContent = '🪪 S\'inscrire avec Passkey';
                     } finally {
                         this.disabled = false;
                     }
@@ -108,14 +106,17 @@
             if (loginBtn) {
                 loginBtn.onclick = async function() {
                     this.disabled = true;
+                    this.textContent = '⏳ Connexion en cours...';
+
                     try {
                         var user = await Auth.login();
-                        showMessage('success', 'Connexion réussie ! Bonjour ' + (user.displayName || user.email));
+                        showMessage('success', '✅ Connexion réussie ! Bonjour ' + (user.displayName || user.email));
                         setTimeout(function() {
                             window.location.href = EVENTS_URL;
                         }, 1200);
                     } catch(err) {
                         showMessage('error', err.message || 'Erreur lors de la connexion');
+                        this.textContent = '🔑 Se connecter avec Passkey';
                     } finally {
                         this.disabled = false;
                     }
